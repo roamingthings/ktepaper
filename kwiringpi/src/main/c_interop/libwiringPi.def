@@ -1,0 +1,16 @@
+package = libwiringpi
+headers = wiringPiSPI.h wiringPi.h errno.h
+compilerOpts = -I external/wiringpi/raspberrypi/include
+linkerOpts = -L../external/wiringpi/raspberrypi/lib -lwiringPi
+libraryPaths = ../external/wiringpi/raspberrypi/lib
+staticLibraries = libwiringPi.a
+
+---
+
+static inline int getErrno() {
+    return errno;
+}
+
+static inline char *getErrorMessage() {
+    return strerror(errno);
+}

@@ -1,0 +1,22 @@
+.konan
+.gradle
+cmake-build-debug/
+
+### Kotlin build artifacts
+*.klib-build
+*.klib
+*.kexe
+*.kt.bc
+
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### For now exclude wiringPi artifacts from the repository
+external/wiringpi/raspberrypi/include/*.h
+kwiringpi/src/main/c_interop/external/wiringpi/raspberrypi/include/*.h
+external/wiringpi/raspberrypi/lib/lib*
+.target

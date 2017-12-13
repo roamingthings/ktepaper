@@ -1,0 +1,19 @@
+
+group 'de.roamingthings'
+version '1.0-SNAPSHOT'
+ext.programName = 'wsepd'
+
+apply plugin: 'konan'
+
+konan.targets = ['raspberrypi']
+
+konanArtifacts {
+    library('wsepd') {
+        srcDir 'src/main/kotlin'
+
+        libraries {
+            allLibrariesFrom kwiringpi
+            artifact 'wsepd'
+        }
+    }
+}

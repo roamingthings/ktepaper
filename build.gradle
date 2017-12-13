@@ -1,0 +1,25 @@
+subprojects {
+    buildscript {
+        repositories {
+            mavenCentral()
+            maven { url "https://dl.bintray.com/jetbrains/kotlin-native-dependencies" }
+        }
+
+        dependencies {
+            classpath "org.jetbrains.kotlin:kotlin-native-gradle-plugin:0.4"
+        }
+    }
+}
+
+ext.kwiringpi = project('kwiringpi')
+
+ext.libwiringpiPath = file('external/wiringpi/raspberrypi')
+
+task buildAll {
+    dependsOn ':kwiringpi:build'
+    dependsOn ':epaper:build'
+}
+
+task buildApp {
+    dependsOn ':epaper:build'
+}

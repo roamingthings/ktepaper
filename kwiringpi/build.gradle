@@ -1,0 +1,22 @@
+
+group 'de.roamingthings'
+version '1.0-SNAPSHOT'
+ext.programName = 'kwiringpi'
+
+apply plugin: 'konan'
+
+konan.targets = ['raspberrypi']
+
+konanArtifacts {
+    interop('libwiringPi') {
+        includeDirs 'src/main/c_interop/external/wiringpi/rapsberrypi/include'
+    }
+
+    library('kwiringPi') {
+        srcDir 'src/main/kotlin'
+
+        libraries {
+            artifact 'libwiringPi'
+        }
+    }
+}
