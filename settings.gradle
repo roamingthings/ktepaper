@@ -11,3 +11,4 @@ if (konanBuildPath != null) {
 include ':kwiringpi'
 include ':wsepd'
 include ':epaper'
+include ':asset-converter'
