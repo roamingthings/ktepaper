@@ -1,16 +1,18 @@
+
 group 'de.roamingthings'
 version '1.0-SNAPSHOT'
+ext.programName = 'epaper'
 
 apply plugin: 'konan'
 
 konan.targets = ['raspberrypi']
 
 konanArtifacts {
-    library('wsepd') {
+    program('epaper') {
         srcDir 'src/main/kotlin'
 
         libraries {
-            allLibrariesFrom kwiringpi
+            allLibrariesFrom kwiringpi, wsepd
         }
     }
 }

@@ -12,14 +12,36 @@ subprojects {
 }
 
 ext.kwiringpi = project('kwiringpi')
+ext.wsepd = project('wsepd')
 
 ext.libwiringpiPath = file('external/wiringpi/raspberrypi')
 
-task buildAll {
+task buildLibraries {
+    description 'Build the native libraries for Raspberry Pi'
+    group 'Build'
+
     dependsOn ':kwiringpi:build'
+    dependsOn ':wsepd:build'
+}
+
+task buildEpaper {
+    description 'Build the native e-Paper application for Raspberry Pi'
+    group 'Build'
+
+    dependsOn ':kwiringpi:build'
+    dependsOn ':wsepd:build'
     dependsOn ':epaper:build'
 }
 
-task buildApp {
-    dependsOn ':epaper:build'
+task buildAssetConverter {
+    description 'Bild the JVM based asset converter application (requires JDK with JavaFX)'
+    group 'Build'
+
+    dependsOn ':asset-converter'
+}
+
+task build(overwrite: true) {
+    doLast {
+        println('Please choose to either buildLibraries, buildEpaper or buildAssetConveter.')
+    }
 }
