@@ -5,7 +5,7 @@ if [ ! -d $KONAN_HOME ]; then
   exit 1
 fi
 
-for l in kwiringpi wsepd ; do
+for l in kwiringpi ktgfx wsepd ; do
   (cd $l && ./make_klib.sh)
 done
 

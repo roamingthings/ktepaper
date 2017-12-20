@@ -1,5 +1,6 @@
 package de.roamingthings.wsepd
 
+import de.roamingthings.ktgfx.*
 import kwiringpi.*
 import kwiringpi.PinMode.INPUT
 import kwiringpi.PinMode.OUTPUT
@@ -21,7 +22,8 @@ private const val PIN_BUSY = 24
 const val LOW = 0
 const val HIGH = 1
 
-class Display {
+class Display : KtGfx(EPD_WIDTH, EPD_HEIGHT) {
+    private var buffer: ByteArray = ByteArray(calculateBufferSizeInBytes(width, height)) { 0x00.toByte() }
 
     init {
         wiringPiSetupGpio()
@@ -95,7 +97,26 @@ class Display {
         setLut()
     }
 
-    fun displayFrame(frame_buffer: IntArray) {
+    fun refresh() {
+        sendBufferToDisplay { buffer[it].inv() }
+    }
+
+    fun sendBufferToDisplay(byteBuffer: ByteArray) {
+        sendBufferToDisplay { byteBuffer[it] }
+    }
+
+    fun sendBufferToDisplay(intBuffer: IntArray) {
+        sendBufferToDisplay { intBuffer[it].toByte() }
+    }
+
+    fun copyBitmapToBuffer(bitmap: IntArray) {
+        var bufferIndex = 0
+        for (value in bitmap) {
+            buffer[bufferIndex++] = value.toByte().inv()
+        }
+    }
+
+    private fun sendBufferToDisplay(dataProvider: (Int) -> Byte) {
         sendCommand(DATA_START_TRANSMISSION_1)
         delayMs(2)
         for (pos in 0 until (EPD_WIDTH * EPD_HEIGHT / 8))
@@ -105,7 +126,7 @@ class Display {
         sendCommand(DATA_START_TRANSMISSION_2)
         delayMs(2)
         for (pos in 0 until (EPD_WIDTH * EPD_HEIGHT / 8))
-            sendData(frame_buffer[pos])
+            sendData(dataProvider.invoke(pos))
         delayMs(2)
 
         sendCommand(DISPLAY_REFRESH)
@@ -132,25 +153,26 @@ class Display {
     }
 
     private fun sendCommand(command: Int) {
-//        println("Sending command $command")
         digitalWrite(PIN_DC, LOW)
-        spiTransfer(CHANNEL0, command)
+        spiTransfer(CHANNEL0, command.toByte())
     }
 
     private fun sendCommand(command: DisplayCommand) {
-//        println("Sending command $command (${command.value})")
         sendCommand(command.value)
     }
 
     private fun sendData(data: Int) {
-//        println("Sending data $data")
+        sendData(data.toByte())
+    }
+
+    private fun sendData(data: Byte) {
         digitalWrite(PIN_DC, HIGH)
         spiTransfer(CHANNEL0, data)
     }
 
     private fun sendData(data: IntArray) {
         for (dataValue in data)
-            sendData(dataValue)
+            sendData(dataValue.toByte())
     }
 
     private fun sendData(data: ByteArray) {
@@ -175,14 +197,45 @@ class Display {
         sendData(lutBw)
 
         // TODO lutBb and lutWb seem to be swapped in original driver/sample
-//        sendCommand(DisplayCommand.LUT_WHITE_TO_BLACK)                      //wb w
-        sendCommand(LUT_BLACK_TO_BLACK)                      //bb b
+        sendCommand(DisplayCommand.LUT_WHITE_TO_BLACK)                      //wb w
+//        sendCommand(LUT_BLACK_TO_BLACK)                      //bb b
         sendData(lutBb)
 
         // TODO lutBb and lutWb seem to be swapped in original driver/sample
-//        sendCommand(DisplayCommand.LUT_BLACK_TO_BLACK)                      //bb b
-        sendCommand(LUT_WHITE_TO_BLACK)                      //wb w
+        sendCommand(DisplayCommand.LUT_BLACK_TO_BLACK)                      //bb b
+//        sendCommand(LUT_WHITE_TO_BLACK)                      //wb w
         sendData(lutWb)
     }
+
+    override fun drawPixel(x: Int, y: Int, color: Color) {
+        if (isCoordinateOutsideCanvas(x, y)) return
+
+        val transformed = transformCoordinateWithCurrentRotation(x, y)
+
+        val bufferIndex = transformed.x / 8 + transformed.y * physicalWidth / 8
+
+        buffer[bufferIndex] =
+                if (color == Color.BLACK) (buffer[bufferIndex].toInt() or (1 shl (7 - transformed.x % 8))).toByte()
+                else (buffer[bufferIndex].toInt() and (0x00FF xor (1 shl (7 - transformed.x * 8)))).toByte()
+    }
+
+    override fun fillScreen(color: Color) {
+        val numBytes = calculateBufferSizeInBytes(physicalWidth, physicalHeight)
+        buffer = ByteArray(numBytes) {
+            (if (color == Color.BLACK) 0xFF else 0x00).toByte()
+        }
+    }
+
+    private fun isCoordinateOutsideCanvas(x: Int, y: Int) = (x < 0) || (y < 0) || (x >= width) || (y >= height)
+
+    private fun transformCoordinateWithCurrentRotation(x: Int, y: Int) =
+            when (rotation) {
+                Rotation.NONE -> Point(x, y)
+                Rotation.DEGREE90 ->  Point(physicalWidth - 1 - y, x)
+                Rotation.DEGREE180 -> Point(physicalWidth - 1 - x, physicalHeight - 1 - y)
+                Rotation.DEGREE270 -> Point(y, physicalHeight - 1 - x)
+            }
+
 }
 
+private fun calculateBufferSizeInBytes(width: Int, height: Int) = ((width + 7) / 8) * height

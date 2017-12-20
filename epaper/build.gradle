@@ -4,6 +4,7 @@ version '1.0-SNAPSHOT'
 ext.programName = 'epaper'
 
 apply plugin: 'konan'
+apply plugin: 'org.hidetake.ssh'
 
 konan.targets = ['raspberrypi']
 
@@ -12,7 +13,28 @@ konanArtifacts {
         srcDir 'src/main/kotlin'
 
         libraries {
-            allLibrariesFrom kwiringpi, wsepd
+            allLibrariesFrom kwiringpi, ktgfx, wsepd
+        }
+    }
+}
+
+remotes {
+    raspberry {
+        host = "${execTargetHost}"
+        user = "${execTargetUser}"
+        identity = file("${System.properties['user.home']}/.ssh/id_rsa")
+        knownHosts = allowAnyHosts
+    }
+}
+
+task deployToTarget {
+    doLast {
+        ssh.run {
+            session(remotes.raspberry) {
+                put from: "${buildDir}/konan/bin/raspberrypi/${programName}.kexe", into: "${execTargetDir}"
+                execute "chmod 755 ${execTargetDir}/${programName}.kexe"
+                execute "${execTargetDir}/${programName}.kexe"
+            }
         }
     }
 }

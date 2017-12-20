@@ -20,3 +20,5 @@ external/wiringpi/raspberrypi/include/*.h
 kwiringpi/src/main/c_interop/external/wiringpi/raspberrypi/include/*.h
 external/wiringpi/raspberrypi/lib/lib*
 .target
+
+gradle.properties

@@ -21,16 +21,22 @@ konanc_library(
 )
 
 konanc_library(
+        NAME ktgfx
+        SOURCES ktgfx/src/main/kotlin
+#        TARGET raspberrypi
+)
+
+konanc_library(
         NAME wsepd
         SOURCES wsepd/src/main/kotlin
-        LIBRARIES kwiringPi
+        LIBRARIES kwiringPi; ktgfx
 #        TARGET raspberrypi
 )
 
 konanc_executable(
         NAME epaper
         SOURCES epaper/src/main/kotlin
-        LIBRARIES kwiringPi; wsepd
+        LIBRARIES kwiringPi; ktgfx; wsepd
         LINKER_OPTS "-L${WIRINGPI_LIBRARY_DIR} -lwiringPi"
 #        TARGET raspberrypi
 )

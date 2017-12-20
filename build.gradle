@@ -3,15 +3,18 @@ subprojects {
         repositories {
             mavenCentral()
             maven { url "https://dl.bintray.com/jetbrains/kotlin-native-dependencies" }
+            maven { url "https://plugins.gradle.org/m2/" }
         }
 
         dependencies {
-            classpath "org.jetbrains.kotlin:kotlin-native-gradle-plugin:0.4"
+            classpath "org.jetbrains.kotlin:kotlin-native-gradle-plugin:0.5"
+            classpath "org.hidetake:gradle-ssh-plugin:2.9.0"
         }
     }
 }
 
 ext.kwiringpi = project('kwiringpi')
+ext.ktgfx = project('ktgfx')
 ext.wsepd = project('wsepd')
 
 ext.libwiringpiPath = file('external/wiringpi/raspberrypi')
@@ -21,6 +24,7 @@ task buildLibraries {
     group 'Build'
 
     dependsOn ':kwiringpi:build'
+    dependsOn ':ktgfx:build'
     dependsOn ':wsepd:build'
 }
 
@@ -29,6 +33,7 @@ task buildEpaper {
     group 'Build'
 
     dependsOn ':kwiringpi:build'
+    dependsOn ':ktgfx:build'
     dependsOn ':wsepd:build'
     dependsOn ':epaper:build'
 }
@@ -44,4 +49,24 @@ task build(overwrite: true) {
     doLast {
         println('Please choose to either buildLibraries, buildEpaper or buildAssetConveter.')
     }
+}
+
+task buildWithDocker(type: Exec) {
+    workingDir = projectDir
+
+    commandLine = ["${dockerCmd}",
+                   "run",
+                   "--rm",
+                   "-v",
+                   "${projectDir}:/home/gradle/project",
+                   "-v",
+                   "${konanCacheDir}:/home/gradle/.konan",
+                   "-v",
+                   "${sshDir}:/home/gradle/.ssh",
+                   "-w",
+                   "/home/gradle/project",
+                   "roamingthings/kotlin-native",
+                   "gradle",
+                   "-Dorg.gradle.daemon=false",
+                   "buildEpaper"]
 }

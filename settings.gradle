@@ -9,6 +9,7 @@ if (konanBuildPath != null) {
 }
 
 include ':kwiringpi'
+include ':ktgfx'
 include ':wsepd'
 include ':epaper'
 

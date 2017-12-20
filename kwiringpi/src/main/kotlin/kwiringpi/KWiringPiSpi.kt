@@ -17,10 +17,10 @@ fun wiringPiSPISetup(channel: SpiChannel, speed: Int): Int {
     return fd
 }
 
-fun spiTransfer(channel: SpiChannel, data: Int) {
+fun spiTransfer(channel: SpiChannel, data: Byte) {
 //        println("Transfer SPI data " + data)
 
-    var dataRef: CValuesRef<ByteVar> = cValuesOf(data.toByte())
+    var dataRef: CValuesRef<ByteVar> = cValuesOf(data)
 
     val result = libwiringpi.wiringPiSPIDataRW(channel.value, dataRef, 1)
 

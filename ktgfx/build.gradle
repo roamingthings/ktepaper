@@ -6,11 +6,7 @@ apply plugin: 'konan'
 konan.targets = ['raspberrypi']
 
 konanArtifacts {
-    library('wsepd') {
+    library('ktgfx') {
         srcDir 'src/main/kotlin'
-
-        libraries {
-            allLibrariesFrom kwiringpi, ktgfx
-        }
     }
 }
