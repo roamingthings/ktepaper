@@ -1,5 +1,9 @@
 package de.roamingthings.ktgfx
 
+/*
+ * This implementation is inspired by the Adafruit-Gfx-Library (https://github.com/adafruit/Adafruit-GFX-Library)
+ */
+
 import de.roamingthings.ktgfx.KtGfx.Corner.*
 import de.roamingthings.ktgfx.font.classicStandardFont
 import platform.posix.abs
@@ -22,13 +26,13 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
     var wrap = true
     var gfxFont: GfxFont? = null
         set(value) {
-            if (value != null) {            // Font struct pointer passed in?
-                if (gfxFont == null) { // And no current font struct?
+            if (value != null) {
+                if (gfxFont == null) {
                     // Switching from classic to new font behavior.
                     // Move cursor pos down 6 pixels so it's on baseline.
                     cursorY += 6
                 }
-            } else if (gfxFont != null) { // NULL passed.  Current font struct defined?
+            } else if (gfxFont != null) {
                 // Switching from new to classic font behavior.
                 // Move cursor pos up 6 pixels so it's at top-left of char.
                 cursorY -= 6
@@ -114,8 +118,10 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
         drawPixel(x, y, color)
     }
 
-    // (x,y) is topmost point; if unsure, calling function
-    // should sort endpoints or call writeLine() instead
+    /**
+     * (x,y) is topmost point; if unsure, calling function
+     * should sort endpoints or call writeLine() instead
+     */
     open fun writeFastVLine(x: Int, y: Int, h: Int, color: Color) {
         // Overwrite in subclasses if startWrite is defined!
         // Can be just writeLine(x, y, x, y+h-1, color);
@@ -123,8 +129,10 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
         drawFastVLine(x, y, h, color)
     }
 
-    // (x,y) is leftmost point; if unsure, calling function
-    // should sort endpoints or call writeLine() instead
+    /**
+     * (x,y) is leftmost point; if unsure, calling function
+     * should sort endpoints or call writeLine() instead
+     */
     open fun writeFastHLine(x: Int, y: Int, w: Int, color: Color) {
         // Overwrite in subclasses if startWrite is defined!
         // Example: writeLine(x, y, x+w-1, y, color);
@@ -139,16 +147,20 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
     open fun endWrite() {
     }
 
-    // (x,y) is topmost point; if unsure, calling function
-    // should sort endpoints or call drawLine() instead
+    /**
+     * (x,y) is topmost point; if unsure, calling function
+     * should sort endpoints or call drawLine() instead
+     */
     open fun drawFastVLine(x: Int, y: Int, h: Int, color: Color) {
         startWrite()
         writeLine(x, y, x, y + h - 1, color)
         endWrite()
     }
 
-    // (x,y) is leftmost point; if unsure, calling function
-    // should sort endpoints or call drawLine() instead
+    /**
+     * (x,y) is leftmost point; if unsure, calling function
+     * should sort endpoints or call drawLine() instead
+     */
     open fun drawFastHLine(x: Int, y: Int, w: Int, color: Color) {
         startWrite()
         writeLine(x, y, x + w - 1, y, color)
@@ -315,12 +327,16 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
     }
 
     fun drawRoundRect(x: Int, y: Int, w: Int, h: Int, r: Int, color: Color) {
-        // smarter version
         startWrite()
-        writeFastHLine(x + r, y, w - 2 * r, color) // Top
-        writeFastHLine(x + r, y + h - 1, w - 2 * r, color) // Bottom
-        writeFastVLine(x, y + r, h - 2 * r, color) // Left
-        writeFastVLine(x + w - 1, y + r, h - 2 * r, color) // Right
+        // Top
+        writeFastHLine(x + r, y, w - 2 * r, color)
+        // Bottom
+        writeFastHLine(x + r, y + h - 1, w - 2 * r, color)
+        // Left
+        writeFastVLine(x, y + r, h - 2 * r, color)
+        // Right
+        writeFastVLine(x + w - 1, y + r, h - 2 * r, color)
+
         // draw four corners
         drawCircleHelper(x + r, y + r, r, TOP_LEFT, color)
         drawCircleHelper(x + w - r - 1, y + r, r, TOP_RIGHT, color)
@@ -388,7 +404,8 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
         }
 
         startWrite();
-        if (y0 == y2) { // Handle awkward all-on-same-line case as its own thing
+        // All-on-same-line case
+        if (y0 == y2) {
             a = x0
             b = x0
 
@@ -473,11 +490,11 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
         else  drawCustomFontChar(x, y, cValue, color, size)
     }
 
+    /**
+     * Character is assumed previously filtered to eliminate
+     * newlines, returns, non-printable characters, etc.
+     */
     private fun drawCustomFontChar(x: Int, y: Int, charValue: Int, foreground: Color, size: Int) {
-        // Character is assumed previously filtered by write() to eliminate
-        // newlines, returns, non-printable characters, etc.  Calling
-        // drawChar() directly with 'bad' characters of font may cause mayhem!
-
         val fontCharIndex = charValue - gfxFont!!.first
         val bitmapArray = gfxFont!!.bitmap
 
@@ -497,22 +514,6 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
             xo16 = xo
             yo16 = yo
         }
-
-        // NOTE: THERE IS NO 'BACKGROUND' COLOR OPTION ON CUSTOM FONTS.
-        // THIS IS ON PURPOSE AND BY DESIGN.  The background color feature
-        // has typically been used with the 'classic' font to overwrite old
-        // screen contents with new data.  This ONLY works because the
-        // characters are a uniform size; it's not a sensible thing to do with
-        // proportionally-spaced fonts with glyphs of varying sizes (and that
-        // may overlap).  To replace previously-drawn text when using a custom
-        // font, use the getTextBounds() function to determine the smallest
-        // rectangle encompassing a string, erase the area with fillRect(),
-        // then draw new text.  This WILL infortunately 'blink' the text, but
-        // is unavoidable.  Drawing 'background' pixels will NOT fix this,
-        // only creates a new set of problems.  Have an idea to work around
-        // this (a canvas object type for MCUs that can afford the RAM and
-        // displays supporting setAddrWindow() and pushColors()), but haven't
-        // implemented this yet.
 
         startWrite();
         for (yy in 0 until h) {
@@ -541,11 +542,10 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
                 ((y + 8 * size - 1) < 0))   // Clip top
             return
 
-        // Handle 'classic' charset behavior
         val correctedCharValue = if ((charValue >= 176)) charValue+1 else charValue
 
         startWrite()
-        for (i in 0 until 5) { // Char bitmap = 5 columns
+        for (i in 0 until 5) {
             var line = classicStandardFont[correctedCharValue * 5 + i]
             for (j in 0 until 8) {
                 if (line and 1 == 1) {
@@ -562,7 +562,8 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
                 line = line shr 1
             }
         }
-        if (background != foreground) { // If opaque, draw vertical line for last column
+
+        if (background != foreground) {
             if (size == 1) writeFastVLine(x + 5, y, 8, background)
             else writeFillRect(x + 5 * size, y, size, 8 * size, background)
         }
@@ -571,21 +572,19 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
 
     fun write(c: Char) {
         if (gfxFont == null) {
-
-            if (c == '\n') {                        // Newline?
-                cursorX = 0                     // Reset x to zero,
-                cursorY += textSize * 8          // advance y one line
-            } else if (c != '\r') {                 // Ignore carriage returns
-                if (wrap && ((cursorX + textSize * 6) > width)) { // Off right?
-                    cursorX = 0                 // Reset x to zero,
-                    cursorY += textSize * 8      // advance y one line
+            if (c == '\n') {
+                cursorX = 0
+                cursorY += textSize * 8
+            } else if (c != '\r') {
+                if (wrap && ((cursorX + textSize * 6) > width)) {
+                    cursorX = 0
+                    cursorY += textSize * 8
                 }
                 drawChar(cursorX, cursorY, c, textColor, textBg, textSize)
-                cursorX += textSize * 6          // Advance x one char
+                cursorX += textSize * 6
             }
 
         } else {
-
             val cValue = c.toInt()
             if (c == '\n') {
                 cursorX = 0
@@ -597,8 +596,8 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
                     val glyph = gfxFont!!.glyph[cValue - first]
                     val w = glyph.width
                     val h = glyph.height
-                    if ((w > 0) && (h > 0)) { // Is there an associated bitmap?
-                        val xo = glyph.xOffset // sic
+                    if ((w > 0) && (h > 0)) {
+                        val xo = glyph.xOffset
                         if (wrap && ((cursorX + textSize * (xo + w)) > width)) {
                             cursorX = 0
                             cursorY += textSize * gfxFont!!.yAdvance
@@ -618,26 +617,11 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
     }
 
     fun drawXBitmap(x: Int, yIn: Int, bitmap: IntArray, w: Int, h: Int, color: Color) {
+        // Nearly identical to drawBitmap(), only the bit order
+        // is reversed here (left-to-right = LSB to MSB):
         drawBitmapMSB(x, yIn, bitmap, w, h) { pixelX, pixelY, currentByte ->
             if (isMsbSet(currentByte)) writePixel(pixelX, pixelY, color)
         }
-
-        var byteWidth = (w + 7) / 8 // Bitmap scanline pad = whole byte
-        var byte = 0
-        var y = yIn
-
-        startWrite()
-        for (j in 0 until h) {
-            for (i in 0 until w) {
-                byte = if (i and 7 != 0) byte shr 1
-                else bitmap[j * byteWidth + i / 8]
-                // Nearly identical to drawBitmap(), only the bit order
-                // is reversed here (left-to-right = LSB to MSB):
-                if (byte and 0x01 != 0) writePixel(x + i, y, color)
-            }
-            y++
-        }
-        endWrite()
     }
 
     fun drawBitmapInverted(x: Int, yIn: Int, bitmap: IntArray, w: Int, h: Int, color: Color) {
@@ -684,8 +668,7 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
             pixelRenderer: (pixelX: Int, pixelY: Int, currentByte: Byte) -> Unit,
             byteSource: (column: Int, line: Int, currentByte: Int, bytesPerLinePadded: Int) -> Int
     ) {
-        // Number of bytes per scanline with padding for final bits
-        val bytesPerLinePadded = (w + 7) / 8
+        val bytesPerLinePadded = calculateBytesPerLineWithPadding(w)
         var currentY = y
 
         startWrite()
@@ -710,6 +693,8 @@ abstract class KtGfx(protected val physicalWidth: Int, protected val physicalHei
 private fun isLsbSet(value: Byte) = (value and 0x80.toByte()) == 0x80.toByte()
 
 private fun isMsbSet(value: Byte) = (value and 0x01.toByte()) == 0x01.toByte()
+
+private fun calculateBytesPerLineWithPadding(pixelWidth: Int): Int = (pixelWidth + 7) / 8
 
 fun String.stripNonPrintable(): String {
     val sb = StringBuilder()

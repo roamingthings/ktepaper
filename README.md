@@ -1,7 +1,6 @@
 # Kotlin-Native e-Paper application
 
-_This project is at a very early stage and many parts are still incomplete (e.g. Gradle
-build support)._
+_This project is at a very early stage and many parts are still incomplete._
 
 This project aims to enable kotlin-native apps running on a Raspberry Pi to utilize
 an e-Paper display like the
@@ -29,3 +28,4 @@ Kotlin/Native.
 If you have a Raspberry Pi zero (W) setup to be connected by USB OTG you can use the `deploy.sh`
 and `halt_target.sh` scripts to control the target. Create a file `.target` containing the
 username and host of your target (e.g. `pi@raspberry.local`).
+
