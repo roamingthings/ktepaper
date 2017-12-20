@@ -2,7 +2,7 @@ FROM openjdk:8-jdk as builder
 
 USER root
 
-ARG KOTLIN_NATIVE_VERSION=master
+ARG KOTLIN_NATIVE_VERSION=v0.5
 
 RUN apt-get update && apt-get install -yq \
         libncurses-dev && \
@@ -20,10 +20,12 @@ FROM gradle:latest
 USER root
 
 RUN apt-get update && apt-get install -yq \
-        libncurses-dev less sudo nano cmake && \
+        libncurses-dev less sudo nano cmake openjfx && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    echo "gradle ALL = (ALL) ALL" >  /etc/sudoers
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN usermod -aG sudo gradle && \
+    echo "gradle\tALL=NOPASSWD: ALL\n" >> /etc/sudoers
 
 COPY --from=builder /kotlin-native/dist /opt/kotlin-native/
 
