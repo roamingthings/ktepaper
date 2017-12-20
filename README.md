@@ -6,6 +6,8 @@ This project aims to enable kotlin-native apps running on a Raspberry Pi to util
 an e-Paper display like the
 [2.7inch e-Paper HAT from Waveshare](https://www.waveshare.com/wiki/2.7inch_e-Paper_HAT).
 
+![Sample Screen](doc/screen-photo.jpg "Screen Photo")
+
 To communicate with the display a wrapper for the the famous [wiringPi](http://wiringpi.com)
 library is included. At the moment a statically compiled library is used. Until I have
 figured out how to redistribute or include the wiringPi source into this project you have to
