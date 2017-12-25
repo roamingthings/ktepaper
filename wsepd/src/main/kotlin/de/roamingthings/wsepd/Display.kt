@@ -1,10 +1,18 @@
 package de.roamingthings.wsepd
 
-import de.roamingthings.ktgfx.*
-import kwiringpi.*
-import kwiringpi.PinMode.INPUT
-import kwiringpi.PinMode.OUTPUT
+import de.roamingthings.ktgfx.Color
+import de.roamingthings.ktgfx.KtGfx
+import de.roamingthings.ktgfx.Point
+import de.roamingthings.ktgfx.Rotation
+import kwiringpi.DigitalPinState.HIGH
+import kwiringpi.DigitalPinState.LOW
+import kwiringpi.Gpio
+import kwiringpi.GpioPinMode.INPUT
+import kwiringpi.GpioPinMode.OUTPUT
+import kwiringpi.KWiringPi.delayMs
 import kwiringpi.SpiChannel.CHANNEL0
+import kwiringpi.spiTransfer
+import kwiringpi.wiringPiSPISetup
 import kotlin.de.roamingthings.wsepd.*
 import kotlin.de.roamingthings.wsepd.DisplayCommand.*
 
@@ -12,26 +20,16 @@ import kotlin.de.roamingthings.wsepd.DisplayCommand.*
 private const val EPD_WIDTH = 176
 private const val EPD_HEIGHT = 264
 
-// Pin definition
-private const val PIN_RST = 17
-private const val PIN_DC = 25
-private const val PIN_CS = 8
-private const val PIN_BUSY = 24
-
-// Pin level definition
-const val LOW = 0
-const val HIGH = 1
 
 class Display : KtGfx(EPD_WIDTH, EPD_HEIGHT) {
+    private val PIN_RST = Gpio(pinNumber = 17, initialPinMode = OUTPUT)
+    private val PIN_DC = Gpio(pinNumber = 25, initialPinMode = OUTPUT)
+    private val PIN_CS = Gpio(pinNumber = 8, initialPinMode = OUTPUT)
+    private val PIN_BUSY = Gpio(pinNumber = 24, initialPinMode = INPUT)
+
     private var buffer: ByteArray = ByteArray(calculateBufferSizeInBytes(width, height)) { 0x00.toByte() }
 
     init {
-        wiringPiSetupGpio()
-
-        pinMode(PIN_RST, OUTPUT)
-        pinMode(PIN_DC, OUTPUT)
-        pinMode(PIN_BUSY, INPUT)
-
         wiringPiSPISetup(CHANNEL0, 2000000)
 
         initDisplay()
@@ -135,9 +133,9 @@ class Display : KtGfx(EPD_WIDTH, EPD_HEIGHT) {
     }
 
     private fun reset() {
-        digitalWrite(PIN_RST, LOW)                //module reset
+        PIN_RST.digitalState = LOW                //module reset
         delayMs(200)
-        digitalWrite(PIN_RST, HIGH)
+        PIN_RST.digitalState = HIGH
         delayMs(200)
     }
 
@@ -153,7 +151,7 @@ class Display : KtGfx(EPD_WIDTH, EPD_HEIGHT) {
     }
 
     private fun sendCommand(command: Int) {
-        digitalWrite(PIN_DC, LOW)
+        PIN_DC.digitalState = LOW
         spiTransfer(CHANNEL0, command.toByte())
     }
 
@@ -166,7 +164,7 @@ class Display : KtGfx(EPD_WIDTH, EPD_HEIGHT) {
     }
 
     private fun sendData(data: Byte) {
-        digitalWrite(PIN_DC, HIGH)
+        PIN_DC.digitalState = HIGH
         spiTransfer(CHANNEL0, data)
     }
 
@@ -176,12 +174,12 @@ class Display : KtGfx(EPD_WIDTH, EPD_HEIGHT) {
     }
 
     private fun sendData(data: ByteArray) {
-        digitalWrite(PIN_DC, HIGH)
+        PIN_DC.digitalState = HIGH
         spiTransfer(CHANNEL0, data)
     }
 
     private fun waitUntilIdle() {
-        while (digitalRead(PIN_BUSY) == 0) {      //0: busy, 1: idle
+        while (PIN_BUSY.digitalState == LOW) {      //0: busy, 1: idle
             delayMs(100)
         }
     }
@@ -197,12 +195,12 @@ class Display : KtGfx(EPD_WIDTH, EPD_HEIGHT) {
         sendData(lutBw)
 
         // TODO lutBb and lutWb seem to be swapped in original driver/sample
-        sendCommand(DisplayCommand.LUT_WHITE_TO_BLACK)                      //wb w
+        sendCommand(LUT_WHITE_TO_BLACK)                      //wb w
 //        sendCommand(LUT_BLACK_TO_BLACK)                      //bb b
         sendData(lutBb)
 
         // TODO lutBb and lutWb seem to be swapped in original driver/sample
-        sendCommand(DisplayCommand.LUT_BLACK_TO_BLACK)                      //bb b
+        sendCommand(LUT_BLACK_TO_BLACK)                      //bb b
 //        sendCommand(LUT_WHITE_TO_BLACK)                      //wb w
         sendData(lutWb)
     }
