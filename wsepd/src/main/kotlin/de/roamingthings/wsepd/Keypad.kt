@@ -29,6 +29,12 @@ class KeyPad {
             val keyMask = (key1Value or key2Value or key3Value or key4Value).inv() and 0x0F
 
             if (currentKeypadMask != keyMask) {
+                val keyModifyMask = keyMask xor currentKeypadMask
+                val keyDownMask = (keyModifyMask and keyMask) and 0x0f
+                val keyUpMask = (keyModifyMask and keyMask.inv()) and 0x0f
+
+                println("Key down: 0x${keyDownMask.toString(16)} - Key up: 0x${keyUpMask.toString(16)}")
+                println("Key down: 0b${keyDownMask.toString(2)} - Key up: 0b${keyUpMask.toString(2)}")
                 currentKeypadMask = keyMask
                 yield(keyMask)
             } else {
@@ -36,4 +42,10 @@ class KeyPad {
             }
         }
     }
+}
+
+class KeyPadEvent(val eventType: KeyPadEventType, val keyNum: Int)
+
+enum class KeyPadEventType {
+    KEY_DOWN, KEY_UP
 }
