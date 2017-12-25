@@ -1,9 +1,7 @@
 import de.roamingthings.ktgfx.Color.Companion.BLACK
 import de.roamingthings.ktgfx.Rotation.DEGREE270
 import de.roamingthings.ktgfx.font.FreeSans12pt7b
-import de.roamingthings.wsepd.Display
-import de.roamingthings.wsepd.KeyPad
-import de.roamingthings.wsepd.welcomeImageBuffer
+import de.roamingthings.wsepd.*
 
 fun main(args: Array<String>) {
     val display = Display()
@@ -34,12 +32,16 @@ fun main(args: Array<String>) {
 
     println("Refreshing display")
     display.refresh()
-    println("done")
+    println("Display job done")
 
     val keyPad = KeyPad()
-    println("Waiting for input")
-    keyPad.keypadInputSequence().forEach { keypadEvent ->
-        println("Key-Event: $keypadEvent")
+    println("Waiting for input. Press KEY4 to exit")
+    var exit = false
+    val keypadInputIterator = keyPad.keypadInputSequence().iterator()
+    while (keypadInputIterator.hasNext() && !exit) {
+        val keyPadEvent = keypadInputIterator.next()
+        println("Key-Event: $keyPadEvent")
+        exit = (keyPadEvent.key == KeypadKey.KEY4 && keyPadEvent.eventType == KeyPadEventType.KEY_UP)
     }
 
 }
