@@ -11,13 +11,13 @@ fun main(args: Array<String>) {
     println("Creating screen content")
     display.drawBitmapInverted(0, 0, welcomeImageBuffer, 176, 264, BLACK)
 
-    display.drawLine(0,0, 10, 10, BLACK)
+    display.drawLine(0, 0, 10, 10, BLACK)
 
-    display.drawRect(0,15, 10, 10, BLACK)
+    display.drawRect(0, 15, 10, 10, BLACK)
     display.fillRect(0, 30, 10, 10, BLACK)
 
     display.drawCircle(5, 50, 5, BLACK)
-    display.fillCircle(5,65, 5, BLACK)
+    display.fillCircle(5, 65, 5, BLACK)
 
     display.drawRoundRect(20, 0, 10, 10, 2, BLACK)
     display.fillRoundRect(20, 15, 10, 10, 2, BLACK)
@@ -38,8 +38,8 @@ fun main(args: Array<String>) {
 
     val keyPad = KeyPad()
     println("Waiting for input")
-    keyPad.keypadInputSequence().forEach {
-        println("Keymap: $it")
+    keyPad.keypadInputSequence().forEach { keypadEvent ->
+        println("Key-Event: $keypadEvent")
     }
 
 }
