@@ -4,9 +4,27 @@ import de.roamingthings.ktgfx.font.FreeSans12pt7b
 import de.roamingthings.wsepd.*
 
 fun main(args: Array<String>) {
+    showSampleScreen()
+
+    inputLoop()
+}
+
+private fun inputLoop() {
+    val keyPad = KeyPad()
+    println("Waiting for input. Press KEY4 to exit")
+    var exit = false
+    val keypadInputIterator = keyPad.keypadInputSequence().iterator()
+    while (keypadInputIterator.hasNext() && !exit) {
+        val keyPadEvent = keypadInputIterator.next()
+        println("Key-Event: $keyPadEvent")
+        exit = (keyPadEvent.key == KeypadKey.KEY4 && keyPadEvent.eventType == KeyPadEventType.KEY_UP)
+    }
+}
+
+private fun showSampleScreen() {
+    println("Creating screen content")
     val display = Display()
 
-    println("Creating screen content")
     display.drawBitmapInverted(0, 0, welcomeImageBuffer, 176, 264, BLACK)
 
     display.drawLine(0, 0, 10, 10, BLACK)
@@ -33,16 +51,5 @@ fun main(args: Array<String>) {
     println("Refreshing display")
     display.refresh()
     println("Display job done")
-
-    val keyPad = KeyPad()
-    println("Waiting for input. Press KEY4 to exit")
-    var exit = false
-    val keypadInputIterator = keyPad.keypadInputSequence().iterator()
-    while (keypadInputIterator.hasNext() && !exit) {
-        val keyPadEvent = keypadInputIterator.next()
-        println("Key-Event: $keyPadEvent")
-        exit = (keyPadEvent.key == KeypadKey.KEY4 && keyPadEvent.eventType == KeyPadEventType.KEY_UP)
-    }
-
 }
 
