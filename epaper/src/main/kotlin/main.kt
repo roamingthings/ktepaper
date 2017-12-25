@@ -2,6 +2,7 @@ import de.roamingthings.ktgfx.Color.Companion.BLACK
 import de.roamingthings.ktgfx.Rotation.DEGREE270
 import de.roamingthings.ktgfx.font.FreeSans12pt7b
 import de.roamingthings.wsepd.Display
+import de.roamingthings.wsepd.KeyPad
 import de.roamingthings.wsepd.welcomeImageBuffer
 
 fun main(args: Array<String>) {
@@ -34,5 +35,12 @@ fun main(args: Array<String>) {
     println("Refreshing display")
     display.refresh()
     println("done")
+
+    val keyPad = KeyPad()
+    println("Waiting for input")
+    keyPad.keypadInputSequence().forEach {
+        println("Keymap: $it")
+    }
+
 }
 
