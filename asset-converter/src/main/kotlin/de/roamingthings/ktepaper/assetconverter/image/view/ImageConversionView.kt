@@ -2,9 +2,11 @@ package de.roamingthings.ktepaper.assetconverter.image.view
 
 import de.roamingthings.ktepaper.assetconverter.ImageConverter
 import de.roamingthings.ktepaper.assetconverter.view.Styles
+import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.embed.swing.SwingFXUtils.toFXImage
 import javafx.geometry.Pos.CENTER
+import javafx.geometry.Pos.CENTER_LEFT
 import javafx.scene.control.TextField
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
@@ -13,8 +15,10 @@ import javafx.stage.FileChooser
 import tornadofx.*
 import java.io.File
 
-private const val displayWidth = 176.0
-private const val displayHeight = 264.0
+//private const val displayWidth = 176.0
+//private const val displayHeight = 264.0
+private const val displayWidth = 128.0
+private const val displayHeight = 250.0
 
 class ImageConversionView : View() {
 
@@ -23,9 +27,13 @@ class ImageConversionView : View() {
     private lateinit var sourceImagePathField: TextField
     private lateinit var originalImageView: ImageView
     private lateinit var convertedImageView: ImageView
+    private lateinit var targetWidthField: TextField
+    private lateinit var targetHeightField: TextField
 
-    private val originalImageLocation = SimpleStringProperty()
+    private val originalImagePath = SimpleStringProperty()
     private val imageSource = SimpleStringProperty()
+    private val targetWidth = SimpleIntegerProperty(displayWidth.toInt())
+    private val targetHeight = SimpleIntegerProperty(displayHeight.toInt())
 
     override val root = vbox(10) {
         useMaxSize = true
@@ -44,8 +52,8 @@ class ImageConversionView : View() {
                 hgrow = ALWAYS
                 useMaxWidth = true
 
-                bind(originalImageLocation)
-                originalImageLocation.addListener({ observable, oldValue, newValue ->
+                bind(originalImagePath)
+                originalImagePath.addListener({ observable, oldValue, newValue ->
                     loadImage(newValue)
                 })
             }
@@ -55,19 +63,54 @@ class ImageConversionView : View() {
                     val chosenFiles = chooseFile("Select some text files", filters)
                     if (chosenFiles.isNotEmpty()) {
                         val newImageFile = chosenFiles[0].absolutePath
-                        originalImageLocation.set(newImageFile)
+                        originalImagePath.set(newImageFile)
                     }
                 }
             }
         }
         hbox(10) {
+            label("Target width") {
+                alignment = CENTER
+                useMaxHeight = true
+            }
+            targetWidthField = textfield {
+                bind(targetWidth)
+                targetWidth.addListener({ observable, oldValue, newValue ->
+                    updateTargetDimension(newValue.toInt(), targetHeight.value)
+                    loadImage(originalImagePath.value)
+                })
+            }
+            label("px") {
+                alignment = CENTER_LEFT
+                useMaxHeight = true
+            }
+            label("height") {
+                alignment = CENTER
+                useMaxHeight = true
+            }
+            targetHeightField = textfield {
+                bind(targetHeight)
+                targetHeight.addListener({ observable, oldValue, newValue ->
+                    updateTargetDimension(targetWidth.value, newValue.toInt())
+                    loadImage(originalImagePath.value)
+                })
+            }
+            label("px") {
+                alignment = CENTER_LEFT
+                hgrow = ALWAYS
+                useMaxWidth = true
+                useMaxHeight = true
+            }
+        }
+
+        hbox(10) {
             vbox {
                 originalImageView = imageview {
                     addClass(Styles.previewImage)
-                    prefWidth = displayWidth
-                    prefHeight = displayHeight
-                    fitWidth = displayWidth
-                    fitHeight = displayHeight
+                    prefWidth = targetWidth.value.toDouble()
+                    prefHeight = targetHeight.value.toDouble()
+                    fitWidth = targetWidth.value.toDouble()
+                    fitHeight = targetHeight.value.toDouble()
                 }
                 label("Original Image") {
                     useMaxWidth = true
@@ -82,10 +125,10 @@ class ImageConversionView : View() {
             vbox {
                 convertedImageView = imageview {
                     addClass(Styles.previewImage)
-                    prefWidth = displayWidth
-                    prefHeight = displayHeight
-                    fitWidth = displayWidth
-                    fitHeight = displayHeight
+                    prefWidth = targetWidth.value.toDouble()
+                    prefHeight = targetHeight.value.toDouble()
+                    fitWidth = targetWidth.value.toDouble()
+                    fitHeight = targetHeight.value.toDouble()
                 }
                 text("Monochrome Image") {
                     useMaxWidth = true
@@ -111,11 +154,19 @@ class ImageConversionView : View() {
             button("Copy to clipboard") {
                 action {
                     clipboard.setContent {
-                        putString(imageSource.get())
+                        putString(imageSource.value)
                     }
                 }
             }
         }
+    }
+
+    private fun updateTargetDimension(width: Int, height: Int) {
+        convertedImageView.resize(width.toDouble(), height.toDouble())
+        convertedImageView.prefHeight(height.toDouble())
+        convertedImageView.prefWidth(width.toDouble())
+        convertedImageView.fitHeight = height.toDouble()
+        convertedImageView.fitWidth = width.toDouble()
     }
 
     private fun loadImage(imagePath: String) {
@@ -123,17 +174,17 @@ class ImageConversionView : View() {
         if (imageFile.exists()) {
             val image = Image(imageFile.inputStream())
             originalImageView.image = image
-            val bitmap = imageConverter.convertToBitmap(image, displayWidth.toInt(), displayHeight.toInt())
+            val bitmap = imageConverter.convertToBitmap(image, targetWidth.value, targetHeight.value)
             convertedImageView.image = toFXImage(bitmap, null)
             imageSource.set(imageConverter.createSourceForImage(bitmap))
         }
     }
 
     override fun onDock() {
-        if (originalImageLocation.isEmpty.value) {
+        if (originalImagePath.isEmpty.value) {
             val welcomeResource = javaClass.getResource("/welcome.bmp")?.file
             if (welcomeResource != null) {
-                originalImageLocation.set(welcomeResource)
+                originalImagePath.set(welcomeResource)
             }
         }
     }
