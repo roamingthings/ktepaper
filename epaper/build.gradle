@@ -38,3 +38,7 @@ task deployToTarget {
         }
     }
 }
+
+task buildAndDeploy {
+    dependsOn 'build', 'deployToTarget'
+}
